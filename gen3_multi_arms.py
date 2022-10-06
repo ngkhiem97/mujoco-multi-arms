@@ -23,7 +23,7 @@ GAP = 15
 
 class SimulatorVelCtrl: #a communication wrapper for MuJoCo
                    
-    def init(self, modelFile, nv, action):
+    def init(self, modelFile, nv, action="pap"):
         
         # create thread lock for performance improvement
         self.lock = threading.Lock()
@@ -48,7 +48,9 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
                 size_table = np.array([0.6,0.3,0.015])            
                 self.generate_obj_table(obj1,pos_table,size_table) 
                 obj3 = ET.SubElement(worldbody, "body")
-                self.generate_obj_box(obj3, pos_table)
+                self.generate_obj_box(obj3, pos_table, 0.1, "ConSurf1")
+                obj4 = ET.SubElement(worldbody, "body")
+                self.generate_obj_box(obj4, pos_table, -0.1, "ConSurf2")
                 self.modelStr = ET.tostring(child, encoding='utf8', method='xml').decode("utf-8") 
                 with open(os.path.join(folder + 'model' + '.xml'), 'w') as f:
                     f.write(self.modelStr)
@@ -65,7 +67,8 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
         self.sim = MjSim(self.model)
         self.viewer = MjViewer(self.sim)
         self.offscreen = MjRenderContextOffscreen(self.sim, 0, quiet = True)
-        self.goal = self.sim.data.get_site_xpos('target0')
+        # self.goal = self.sim.data.get_site_xpos('target0')
+        self.viewer.render()
 
         # buffers
         self.nv = nv
@@ -79,12 +82,12 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
         self.thViewer.start()
 
         
-    def generate_obj_box(self, obj, pos_table):
-        pos_box = np.array([0.45, 0.0, pos_table[2]+0.015+0.025])
-        obj.set('name', 'ConSurf')                
-        obj.set('pos', '{} {} {}'.format(pos_box[0], pos_box[1], pos_box[2]))# 0.035))
+    def generate_obj_box(self, obj, pos_table, prefix, name):
+        pos_box = np.array([0.45, 0.0, pos_table[2]+0.015+0.125])
+        obj.set('name', name)                
+        obj.set('pos', '{} {} {}'.format(pos_box[0], pos_box[1]+prefix, pos_box[2]))# 0.035))
         geom = ET.SubElement(obj, "geom")
-        geom.set('name', 'ConSurf') 
+        geom.set('name', name) 
         geom.set('type','box')
         geom.set('size','0.035 0.015 0.025')
         geom.set('rgba','0.999 0.999 0.999 1')    
@@ -96,49 +99,49 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
         geom.set('margin','0.0')
         
         joint_x = ET.SubElement(obj, "joint")
-        joint_x.set('name','object0:joint_x')
+        joint_x.set('name','object0:joint_x'+name)
         joint_x.set('pos','0 0 0')
         joint_x.set('type','slide')        
         joint_x.set('axis','1 0 0')
         joint_x.set('damping','0.01')
         
         joint_y = ET.SubElement(obj, "joint")
-        joint_y.set('name','object0:joint_y')
+        joint_y.set('name','object0:joint_y'+name)
         joint_y.set('pos','0 0 0')
         joint_y.set('type','slide')        
         joint_y.set('axis','0 1 0')
         joint_y.set('damping','0.01')
         
         joint_z = ET.SubElement(obj, "joint")
-        joint_z.set('name','object0:joint_z')
+        joint_z.set('name','object0:joint_z'+name)
         joint_z.set('pos','0 0 0')
         joint_z.set('type','slide')        
         joint_z.set('axis','0 0 1')
         joint_z.set('damping','0.01')
         
         joint_r = ET.SubElement(obj, "joint")
-        joint_r.set('name','object0:joint_r')
+        joint_r.set('name','object0:joint_r'+name)
         joint_r.set('pos','0 0 0')
         joint_r.set('type','hinge')        
         joint_r.set('axis','1 0 0')
         joint_r.set('damping','0.01')
         
         joint_p = ET.SubElement(obj, "joint")
-        joint_p.set('name','object0:joint_p')
+        joint_p.set('name','object0:joint_p'+name)
         joint_p.set('pos','0 0 0')
         joint_p.set('type','hinge')        
         joint_p.set('axis','0 1 0')
         joint_p.set('damping','0.01')
         
         joint_yw = ET.SubElement(obj, "joint")
-        joint_yw.set('name','object0:joint_yw')
+        joint_yw.set('name','object0:joint_yw'+name)
         joint_yw.set('pos','0 0 0')
         joint_yw.set('type','hinge')        
         joint_yw.set('axis','0 0 1')
         joint_yw.set('damping','0.01')
         
         site = ET.SubElement(obj, "site")
-        site.set('name', 'object0')
+        site.set('name', 'object0'+name)
         site.set('size', '0.0001 0.0001')
         site.set('rgba', '0 1 0 1')
         site.set('type', 'cylinder')
@@ -161,12 +164,12 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
         geom.set('solref','0.01 1')
         geom.set('condim','4')
         geom.set('margin','0.0')
-        site = ET.SubElement(obj, "site")
-        site.set('name', 'target0')
-        site.set('size', '0.02 0.0001')
-        site.set('rgba', '0 1 0 1')
-        site.set('type', 'cylinder')
-        site.set('pos', '{} {} {}'.format(-0.1,-0.25,size_table[2]))
+        # site = ET.SubElement(obj, "site")
+        # site.set('name', 'target0')
+        # site.set('size', '0.02 0.0001')
+        # site.set('rgba', '0 1 0 1')
+        # site.set('type', 'cylinder')
+        # site.set('pos', '{} {} {}'.format(-0.1,-0.25,size_table[2]))
         
         #table legs                
         geom1 = ET.SubElement(obj, "geom")
@@ -236,6 +239,7 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
         self.lock1.acquire()
         for i in range(7):
             self.sim.data.qpos[i] = qtgt[i]
+            self.sim.data.qpos[i+15] = qtgt[i]
         self.lock1.release()          
         
         gqtgt = float(self.sim.data.ctrl[self.nv])
@@ -377,6 +381,8 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
             self.lock1.acquire()
             self.sim.data.ctrl[self.nv] = gqtgt 
             self.sim.data.ctrl[self.nv+1] = gqtgt
+            self.sim.data.ctrl[self.nv+9] = gqtgt 
+            self.sim.data.ctrl[self.nv+1+9] = gqtgt
             self.lock1.release()
         
         self.twist_ee = np.array([0,0,0.01,0,0,0])
@@ -407,6 +413,8 @@ class SimulatorVelCtrl: #a communication wrapper for MuJoCo
             self.lock1.acquire()
             self.sim.data.ctrl[self.nv] = gqtgt 
             self.sim.data.ctrl[self.nv+1] = gqtgt
+            self.sim.data.ctrl[self.nv+9] = gqtgt 
+            self.sim.data.ctrl[self.nv+1+9] = gqtgt
             self.lock1.release()
 
         self.twist_ee = np.array([0, 0, 0, 0, 0, 0])
