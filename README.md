@@ -20,3 +20,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/nvidia
 export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so
 python3 ./gen3_multi_arms.py
 ```
+
+## Acknowledgement
+
+This repository is developed from [Dr. Cui](https://www.jindacui.com/bio) source code.
