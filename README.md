@@ -14,5 +14,9 @@ pip install -r ./requirements.txt
 ## Start demo on a specific action
 
 ```bash
+cp -R ./gen3 /tmp
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/khiem/.mujoco/mujoco210/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/nvidia
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so
 python3 ./gen3_multi_arms.py
 ```
